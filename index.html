@@ -53,6 +53,9 @@ h1,h2,h3{margin:0;text-wrap:balance}
 .av{width:38px;height:38px;border-radius:50%;background:var(--a);display:grid;place-items:center;color:var(--on-a);font:500 1.05rem Newsreader,serif;flex:none}
 main{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:8px 18px 18px;display:flex;flex-direction:column;gap:14px;max-width:680px;width:100%;margin:0 auto}
 main::-webkit-scrollbar{display:none}
+/* A tall child must scroll the page, never be squashed and clipped. .spacer sets its own
+   flex and still grows, because a class beats this selector. */
+main>*{flex-shrink:0}
 
 .bubble{padding:12px 15px;border-radius:19px;max-width:87%;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
 .them{align-self:flex-start;background:var(--s);color:var(--t);font:400 1.06rem/1.52 Newsreader,Georgia,serif;border-bottom-left-radius:7px;box-shadow:0 1px 3px var(--shadow)}
