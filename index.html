@@ -56,8 +56,31 @@
 [hidden]{display:none!important}
 html{height:100%}
 html,body{overscroll-behavior:none}
-body{margin:0;background:var(--bg);color:var(--t);font:16px/1.5 Manrope,system-ui,-apple-system,sans-serif;display:flex;flex-direction:column;height:100dvh;overflow:hidden;padding-top:env(safe-area-inset-top);-webkit-tap-highlight-color:transparent}
-#app{flex:1;display:flex;flex-direction:column;min-height:0}
+/* This is a phone app. On a phone that has always been true because there was nowhere else
+   for it to go; on a wide browser window it used to stretch out, and worse, unevenly: the
+   bottom nav had no width limit at all while the screens above it did, so the two visibly
+   disagreed with each other the moment the window was wider than a phone. Fixed properly: the
+   whole shell is one fixed phone-sized box, centred, and nothing inside it measures itself
+   independently any more. On an actual phone the box is exactly the viewport, so nothing about
+   the phone experience changes; on a desktop window it now behaves like the same app sitting
+   in the middle of the screen rather than a different, wider one.
+   430 by 926 is a modern large phone's own logical size (matches an iPhone 15/16 Pro Max),
+   picked as the reference so the desktop view reads at the same scale a real phone would,
+   not an arbitrary in-between width. min() keeps it from overflowing a smaller window. */
+html,body{background:var(--s2)}
+body{margin:0;color:var(--t);font:16px/1.5 Manrope,system-ui,-apple-system,sans-serif;
+  display:flex;align-items:center;justify-content:center;height:100dvh;overflow:hidden;
+  -webkit-tap-highlight-color:transparent}
+/* position:relative turns #app into the anchor for the pill and the sheets below, which were
+   position:fixed against the whole browser window. That was invisible while the app was full
+   bleed, because the window and the app were the same box; now that #app is a smaller box
+   centred in the window, anything still fixed to the window would float in the wrong place,
+   off to one side of the actual phone frame instead of docked to its edges. */
+#app{position:relative;flex:none;display:flex;flex-direction:column;min-height:0;
+  width:min(100vw,430px);height:min(100dvh,926px);
+  background:var(--bg);box-shadow:0 0 0 1px var(--ln),0 20px 60px oklch(0.1 0.01 40/.28);
+  padding-top:env(safe-area-inset-top);overflow:hidden}
+@media (min-width:431px) and (min-height:927px){ #app{border-radius:28px} }
 button{font:inherit;cursor:pointer;color:inherit}
 h1,h2,h3{margin:0;text-wrap:balance}
 :focus-visible{outline:2px solid var(--a);outline-offset:2px;border-radius:8px}
@@ -65,7 +88,7 @@ h1,h2,h3{margin:0;text-wrap:balance}
 .top{flex:none;display:flex;align-items:center;gap:10px;padding:14px 18px 8px;font-size:.9rem;color:var(--t2)}
 .top b{color:var(--t);font-weight:700;display:block;font-size:1.02rem}
 .av{width:38px;height:38px;border-radius:50%;background:var(--a);display:grid;place-items:center;color:var(--on-a);font:500 1.05rem Newsreader,serif;flex:none}
-main{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:8px 18px 18px;display:flex;flex-direction:column;gap:14px;max-width:680px;width:100%;margin:0 auto}
+main{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:8px 18px 18px;display:flex;flex-direction:column;gap:14px}
 main::-webkit-scrollbar{display:none}
 /* A tall child must scroll the page, never be squashed and clipped. .spacer sets its own
    flex and still grows, because a class beats this selector. */
@@ -82,7 +105,7 @@ main>*{flex-shrink:0}
 .scale.k10{display:grid;grid-template-columns:repeat(5,1fr)}
 .scale.k10 button{height:auto;min-height:58px;font-size:.72rem;line-height:1.18;padding:5px 3px;white-space:normal;font-weight:700}
 
-.compose{flex:none;display:flex;gap:8px;padding:8px 18px calc(12px + env(safe-area-inset-bottom));max-width:680px;width:100%;margin:0 auto}
+.compose{flex:none;display:flex;gap:8px;padding:8px 18px calc(12px + env(safe-area-inset-bottom))}
 .compose textarea{flex:1;resize:none;border:1px solid var(--ln);border-radius:22px;padding:11px 16px;font:inherit;background:var(--s);color:var(--t);max-height:140px}
 .compose textarea::placeholder{color:var(--t2)}
 .compose button{border:0;border-radius:50%;width:46px;height:46px;background:var(--a);color:var(--on-a);font-size:1.2rem;flex:none;transition:transform .12s ease}
@@ -97,12 +120,17 @@ nav .dot{position:absolute;top:2px;right:4px;width:7px;height:7px;border-radius:
 
 /* A new build has taken over in the background. Never reload out from under him mid sentence,
    so this is a choice, not an interruption, and it sits above the nav on every screen. */
-.update-pill{position:fixed;left:50%;bottom:calc(64px + env(safe-area-inset-bottom));
+.update-pill{position:absolute;left:50%;bottom:calc(64px + env(safe-area-inset-bottom));
   transform:translateX(-50%);z-index:30;border:0;border-radius:999px;
   padding:11px 18px;background:var(--a);color:var(--on-a);font:700 .82rem Manrope,sans-serif;
-  box-shadow:0 4px 16px var(--shadow);max-width:calc(100vw - 32px);text-align:center}
+  box-shadow:0 4px 16px var(--shadow);max-width:calc(100% - 32px);text-align:center}
 @media (prefers-reduced-motion:no-preference){
-  .update-pill{animation:rise .32s cubic-bezier(.16,1,.3,1) both}
+  /* Not the shared rise keyframe: that one lands on transform:none, which would silently
+     replace this element's own translateX(-50%) centering the moment the entrance finished,
+     leaving the pill sitting half its own width off centre forever after. Found by measuring
+     its actual position rather than by eye. */
+  .update-pill{animation:pill-rise .32s cubic-bezier(.16,1,.3,1) both}
+  @keyframes pill-rise{from{opacity:0;transform:translateX(-50%) translateY(7px)}to{opacity:1;transform:translateX(-50%)}}
 }
 
 .card{background:var(--s);border-radius:18px;padding:15px 17px;font-size:.95rem;box-shadow:0 1px 3px var(--shadow)}
@@ -279,13 +307,13 @@ ol.steps li{margin:6px 0}
 /* ---- One sheet, replacing eighteen browser dialogs ----
    prompt, confirm and alert cannot be styled, ignore both themes, and say "localhost" at the
    top. This is the app's own surface instead, built from the card and button styles above. */
-.scrim{position:fixed;inset:0;background:oklch(0.15 0.02 40/.42);z-index:40;
+.scrim{position:absolute;inset:0;background:oklch(0.15 0.02 40/.42);z-index:40;
   animation:fade .2s ease both}
-.sheet{position:fixed;left:0;right:0;bottom:0;z-index:41;background:var(--bg);
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:41;background:var(--bg);
   border-radius:22px 22px 0 0;border-top:1px solid var(--ln);
   padding:14px 18px calc(20px + env(safe-area-inset-bottom));
-  display:flex;flex-direction:column;gap:11px;max-height:86dvh;overflow-y:auto;
-  max-width:680px;margin:0 auto;box-shadow:0 -8px 32px var(--shadow);
+  display:flex;flex-direction:column;gap:11px;max-height:86%;overflow-y:auto;
+  box-shadow:0 -8px 32px var(--shadow);
   animation:rise-sheet .28s cubic-bezier(.16,1,.3,1) both}
 .sheet>*{flex-shrink:0}
 .sheet h3{font:500 1.25rem Newsreader,serif}
@@ -370,7 +398,8 @@ ol.steps li{margin:6px 0}
   @keyframes rise{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-@media (min-width:700px){ main{padding:12px 0 22px} .top,.compose{padding-left:0;padding-right:0} }
+/* There is no longer a separate desktop layout. The whole point of the fixed-size #app shell
+   above is that nothing in here behaves differently by viewport width any more. */
 </style>
   <script type="module" crossorigin>(function(){const e=document.createElement("link").relList;if(e&&e.supports&&e.supports("modulepreload"))return;for(const n of document.querySelectorAll('link[rel="modulepreload"]'))r(n);new MutationObserver(n=>{for(const i of n)if(i.type==="childList")for(const a of i.addedNodes)a.tagName==="LINK"&&a.rel==="modulepreload"&&r(a)}).observe(document,{childList:!0,subtree:!0});function s(n){const i={};return n.integrity&&(i.integrity=n.integrity),n.referrerPolicy&&(i.referrerPolicy=n.referrerPolicy),n.crossOrigin==="use-credentials"?i.credentials="include":n.crossOrigin==="anonymous"?i.credentials="omit":i.credentials="same-origin",i}function r(n){if(n.ep)return;n.ep=!0;const i=s(n);fetch(n.href,i)}})();const qr=Symbol.for("@supabase/supabase-js.traceContextExtractor");function Mr(){return globalThis[qr]}function $t(t,e){var s={};for(var r in t)Object.prototype.hasOwnProperty.call(t,r)&&e.indexOf(r)<0&&(s[r]=t[r]);if(t!=null&&typeof Object.getOwnPropertySymbols=="function")for(var n=0,r=Object.getOwnPropertySymbols(t);n<r.length;n++)e.indexOf(r[n])<0&&Object.prototype.propertyIsEnumerable.call(t,r[n])&&(s[r[n]]=t[r[n]]);return s}function Hr(t,e,s,r){function n(i){return i instanceof s?i:new s(function(a){a(i)})}return new(s||(s=Promise))(function(i,a){function o(u){try{c(r.next(u))}catch(h){a(h)}}function l(u){try{c(r.throw(u))}catch(h){a(h)}}function c(u){u.done?i(u.value):n(u.value).then(o,l)}c((r=r.apply(t,e||[])).next())})}const Fr=t=>t?(...e)=>t(...e):(...e)=>fetch(...e);class os extends Error{constructor(e,s="FunctionsError",r){super(e),this.name=s,this.context=r}toJSON(){return{name:this.name,message:this.message,context:this.context}}}class Wr extends os{constructor(e){super("Failed to send a request to the Edge Function","FunctionsFetchError",e)}}class ps extends os{constructor(e){super("Relay Error invoking the Edge Function","FunctionsRelayError",e)}}class gs extends os{constructor(e){super("Edge Function returned a non-2xx status code","FunctionsHttpError",e)}}var Jt;(function(t){t.Any="any",t.ApNortheast1="ap-northeast-1",t.ApNortheast2="ap-northeast-2",t.ApSouth1="ap-south-1",t.ApSoutheast1="ap-southeast-1",t.ApSoutheast2="ap-southeast-2",t.CaCentral1="ca-central-1",t.EuCentral1="eu-central-1",t.EuWest1="eu-west-1",t.EuWest2="eu-west-2",t.EuWest3="eu-west-3",t.SaEast1="sa-east-1",t.UsEast1="us-east-1",t.UsWest1="us-west-1",t.UsWest2="us-west-2"})(Jt||(Jt={}));class Kr{constructor(e,{headers:s={},customFetch:r,region:n=Jt.Any}={}){this.url=e,this.headers=s,this.region=n,this.fetch=Fr(r)}setAuth(e){this.headers.Authorization=`Bearer ${e}`}invoke(e){return Hr(this,arguments,void 0,function*(s,r={}){var n,i;let a,o,l;try{const{headers:c,method:u,body:h,signal:d,timeout:f}=r;let g={},{region:y}=r;y||(y=this.region);const m=new URL(`${this.url}/${s}`);y&&y!=="any"&&(g["x-region"]=y,m.searchParams.set("forceFunctionRegion",y));let v;const w=!!c&&Object.keys(c).some(le=>le.toLowerCase()==="content-type");h&&!w?typeof Blob<"u"&&h instanceof Blob||h instanceof ArrayBuffer?(g["Content-Type"]="application/octet-stream",v=h):typeof h=="string"?(g["Content-Type"]="text/plain",v=h):typeof FormData<"u"&&h instanceof FormData?v=h:(g["Content-Type"]="application/json",v=JSON.stringify(h)):h&&typeof h!="string"&&!(typeof Blob<"u"&&h instanceof Blob)&&!(h instanceof ArrayBuffer)&&!(typeof FormData<"u"&&h instanceof FormData)?v=JSON.stringify(h):v=h;let b=d;f&&(o=new AbortController,a=setTimeout(()=>o.abort(),f),d?(b=o.signal,l=()=>o.abort(),d.addEventListener("abort",l)):b=o.signal);const T=yield this.fetch(m.toString(),{method:u||"POST",headers:Object.assign(Object.assign(Object.assign({},g),this.headers),c),body:v,signal:b}).catch(le=>{throw new Wr(le)}),P=T.headers.get("x-relay-error");if(P&&P==="true")throw new ps(T);if(!T.ok)throw new gs(T);let $=((n=T.headers.get("Content-Type"))!==null&&n!==void 0?n:"text/plain").split(";")[0].trim().toLowerCase(),I;return $==="application/json"?I=yield T.json():$==="application/octet-stream"||$==="application/pdf"?I=yield T.blob():$==="text/event-stream"?I=T:$==="multipart/form-data"?I=yield T.formData():I=yield T.text(),{data:I,error:null,response:T}}catch(c){return{data:null,error:c,response:c instanceof gs||c instanceof ps?c.context:void 0}}finally{a&&clearTimeout(a),l&&((i=r.signal)===null||i===void 0||i.removeEventListener("abort",l))}})}}const sr=3,ys=t=>Math.min(1e3*2**t,3e4),Vr=[520,503],rr=["GET","HEAD","OPTIONS"];var Bt=class extends Error{constructor(t){super(t.message),this.name="PostgrestError",this.details=t.details,this.hint=t.hint,this.code=t.code}toJSON(){return{name:this.name,message:this.message,details:this.details,hint:this.hint,code:this.code}}};function Ze(t){"@babel/helpers - typeof";return Ze=typeof Symbol=="function"&&typeof Symbol.iterator=="symbol"?function(e){return typeof e}:function(e){return e&&typeof Symbol=="function"&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e},Ze(t)}function Jr(t,e){if(Ze(t)!="object"||!t)return t;var s=t[Symbol.toPrimitive];if(s!==void 0){var r=s.call(t,e);if(Ze(r)!="object")return r;throw new TypeError("@@toPrimitive must return a primitive value.")}return(e==="string"?String:Number)(t)}function Gr(t){var e=Jr(t,"string");return Ze(e)=="symbol"?e:e+""}function zr(t,e,s){return(e=Gr(e))in t?Object.defineProperty(t,e,{value:s,enumerable:!0,configurable:!0,writable:!0}):t[e]=s,t}function ms(t,e){var s=Object.keys(t);if(Object.getOwnPropertySymbols){var r=Object.getOwnPropertySymbols(t);e&&(r=r.filter(function(n){return Object.getOwnPropertyDescriptor(t,n).enumerable})),s.push.apply(s,r)}return s}function Be(t){for(var e=1;e<arguments.length;e++){var s=arguments[e]!=null?arguments[e]:{};e%2?ms(Object(s),!0).forEach(function(r){zr(t,r,s[r])}):Object.getOwnPropertyDescriptors?Object.defineProperties(t,Object.getOwnPropertyDescriptors(s)):ms(Object(s)).forEach(function(r){Object.defineProperty(t,r,Object.getOwnPropertyDescriptor(s,r))})}return t}function vs(t,e){return new Promise(s=>{if(e?.aborted){s();return}const r=setTimeout(()=>{e?.removeEventListener("abort",n),s()},t);function n(){clearTimeout(r),s()}e?.addEventListener("abort",n)})}function Yr(t,e,s,r){return!(!r||s>=sr||!rr.includes(t)||!Vr.includes(e))}var Xr=class{constructor(t){var e,s,r,n,i;this.shouldThrowOnError=!1,this.retryEnabled=!0,this.method=t.method,this.url=t.url,this.headers=new Headers(t.headers),this.schema=t.schema,this.body=t.body,this.shouldThrowOnError=(e=t.shouldThrowOnError)!==null&&e!==void 0?e:!1,this.signal=t.signal,this.isMaybeSingle=(s=t.isMaybeSingle)!==null&&s!==void 0?s:!1,this.shouldStripNulls=(r=t.shouldStripNulls)!==null&&r!==void 0?r:!1,this.urlLengthLimit=(n=t.urlLengthLimit)!==null&&n!==void 0?n:8e3,this.retryEnabled=(i=t.retry)!==null&&i!==void 0?i:!0,t.fetch?this.fetch=t.fetch:this.fetch=fetch}throwOnError(){return this.shouldThrowOnError=!0,this}stripNulls(){if(this.headers.get("Accept")==="text/csv")throw new Error("stripNulls() cannot be used with csv()");return this.shouldStripNulls=!0,this}setHeader(t,e){return this.headers=new Headers(this.headers),this.headers.set(t,e),this}retry(t){return this.retryEnabled=t,this}then(t,e){var s=this;if(this.schema===void 0||(["GET","HEAD"].includes(this.method)?this.headers.set("Accept-Profile",this.schema):this.headers.set("Content-Profile",this.schema)),this.method!=="GET"&&this.method!=="HEAD"&&this.headers.set("Content-Type","application/json"),this.shouldStripNulls){const a=this.headers.get("Accept");a==="application/vnd.pgrst.object+json"?this.headers.set("Accept","application/vnd.pgrst.object+json;nulls=stripped"):(!a||a==="application/json")&&this.headers.set("Accept","application/vnd.pgrst.array+json;nulls=stripped")}const r=this.fetch;let i=(async()=>{let a=0;for(;;){const c={};s.headers.forEach((h,d)=>{c[d]=h}),a>0&&(c["X-Retry-Count"]=String(a));let u;try{u=await r(s.url.toString(),{method:s.method,headers:c,body:JSON.stringify(s.body,(h,d)=>typeof d=="bigint"?d.toString():d),signal:s.signal})}catch(h){if(h?.name==="AbortError"||h?.code==="ABORT_ERR"||!rr.includes(s.method))throw h;if(s.retryEnabled&&a<sr){const d=ys(a);a++,await vs(d,s.signal);continue}throw h}if(Yr(s.method,u.status,a,s.retryEnabled)){var o,l;const h=(o=(l=u.headers)===null||l===void 0?void 0:l.get("Retry-After"))!==null&&o!==void 0?o:null,d=h!==null?Math.max(0,parseInt(h,10)||0)*1e3:ys(a);await u.text(),a++,await vs(d,s.signal);continue}return await s.processResponse(u)}})();return this.shouldThrowOnError||(i=i.catch(a=>{var o;let l="",c="",u="";const h=a?.cause;if(h){var d,f,g,y;const w=(d=h?.message)!==null&&d!==void 0?d:"",b=(f=h?.code)!==null&&f!==void 0?f:"";l=`${(g=a?.name)!==null&&g!==void 0?g:"FetchError"}: ${a?.message}`,l+=`
 
