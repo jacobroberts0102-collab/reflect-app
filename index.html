@@ -83,6 +83,17 @@ body{margin:0;color:var(--t);font:16px/1.5 Manrope,system-ui,-apple-system,sans-
   background:var(--bg);box-shadow:0 0 0 1px var(--ln),0 20px 60px oklch(0.1 0.01 40/.28);
   padding-top:env(safe-area-inset-top);overflow:hidden}
 @media (min-width:431px) and (min-height:927px){ #app{border-radius:28px} }
+/* Installed as its own app (iOS home screen, Android installed PWA), #app must be pinned to
+   the real screen with position:fixed;inset:0 rather than sized off vw/vh. Some standalone
+   webviews report a stale or "desktop site" viewport to vw/vh units, which made the whole
+   shell shrink to the 430x926 reference size and float in the middle of the real screen like
+   a phone-within-a-phone, even though it fills the window correctly in an ordinary browser
+   tab where vw/vh are trustworthy. inset:0 measures the actual viewport directly and cannot
+   be fooled the same way. Desktop-tab preview keeps the floating-phone look untouched. */
+@media (display-mode:standalone),(display-mode:fullscreen),(display-mode:minimal-ui){
+  body{align-items:stretch;justify-content:stretch}
+  #app{position:fixed;inset:0;width:auto;height:auto;border-radius:0;box-shadow:none}
+}
 button{font:inherit;cursor:pointer;color:inherit}
 h1,h2,h3{margin:0;text-wrap:balance}
 :focus-visible{outline:2px solid var(--a);outline-offset:2px;border-radius:8px}
