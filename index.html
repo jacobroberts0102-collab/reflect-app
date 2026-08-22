@@ -43,6 +43,9 @@
   --on-a:oklch(0.19 0.02 48);
 }
 *{box-sizing:border-box}
+/* A class that sets display beats the browser's own [hidden] rule, so anything hidden by the
+   attribute comes back the moment it also has a class. .nowbox did exactly that. */
+[hidden]{display:none!important}
 html{height:100%}
 html,body{overscroll-behavior:none}
 body{margin:0;background:var(--bg);color:var(--t);font:16px/1.5 Manrope,system-ui,-apple-system,sans-serif;display:flex;flex-direction:column;height:100dvh;overflow:hidden;padding-top:env(safe-area-inset-top);-webkit-tap-highlight-color:transparent}
