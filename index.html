@@ -64,7 +64,9 @@ html,body{overscroll-behavior:none}
    independently any more. On an actual phone the box is exactly the viewport, so nothing about
    the phone experience changes; on a desktop window it now behaves like the same app sitting
    in the middle of the screen rather than a different, wider one.
-   430 by 926 is a modern large phone's own logical size (matches an iPhone 15/16 Pro Max),
+   430 by 926 is a modern large phone's own logical size (the width of an iPhone 14/15 Pro
+   Max, the height of an iPhone 12/13 Pro Max, close enough to any of them that nothing here
+   depends on matching one exactly),
    picked as the reference so the desktop view reads at the same scale a real phone would,
    not an arbitrary in-between width. min() keeps it from overflowing a smaller window. */
 html,body{background:var(--s2)}
