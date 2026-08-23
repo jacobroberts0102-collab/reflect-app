@@ -20,7 +20,12 @@ self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   if (e.request.method !== 'GET' || url.origin !== self.location.origin) return;   // never touch the API or anything private
   e.respondWith(caches.match(e.request, { ignoreSearch: true }).then(hit => {
-    const live = fetch(e.request).then(res => { if (res.ok) caches.open(CACHE).then(c => c.put(e.request, res.clone())); return res; }).catch(() => hit);
+    // Falls back to hit on a failed fetch, same as before, but hit itself is undefined for
+    // anything outside the small SHELL list requested for the first time: respondWith(undefined)
+    // is a hard network-error response, not an ordinary failed fetch, the one case this could
+    // still produce. A synthesised response only when there is genuinely nothing else to offer.
+    const live = fetch(e.request).then(res => { if (res.ok) caches.open(CACHE).then(c => c.put(e.request, res.clone())); return res; })
+      .catch(() => hit ?? new Response('Offline', { status: 503, statusText: 'Offline' }));
     return hit || live;
   }));
 });
