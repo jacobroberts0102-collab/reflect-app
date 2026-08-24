@@ -120,9 +120,17 @@ main>*{flex-shrink:0}
 .me{align-self:flex-end;background:var(--a);color:var(--on-a);border-bottom-right-radius:7px;font-weight:500}
 /* Lifeline's own number, wherever the therapist or a K10 reading names it: a real tap-to-call
    link rather than ten digits he has to leave the app and dial by hand in the one moment that is
-   built to matter least for that kind of friction. */
-.bubble a,.card a,.refl a{color:var(--a);font-weight:700;text-decoration:underline}
+   built to matter least for that kind of friction. Round 88 made it a link at all; round 89 found
+   the hit target itself was only the bare text glyphs, as small as 16px tall in a wrapped bubble,
+   this app's one link that can genuinely matter mid-crisis with an unsteady hand. inline-block
+   plus a matching negative margin grows the real tappable box (padding included) without shifting
+   where the word sits in the sentence; :active gives the same press feedback every other tappable
+   thing in the app already has, so it reads as a control, not a formatting accident. */
+.bubble a,.card a,.refl a{color:var(--a);font-weight:700;text-decoration:underline;
+  display:inline-block;padding:7px 9px;margin:-7px -9px;border-radius:10px}
+.bubble a:active,.card a:active,.refl a:active{background:color-mix(in oklch,var(--a) 16%,transparent)}
 .me a{color:var(--on-a)}
+.me a:active{background:color-mix(in oklch,var(--on-a) 20%,transparent)}
 
 .inline{background:var(--s);border-radius:16px;padding:13px;align-self:stretch;font-size:.85rem;color:var(--t2);box-shadow:0 1px 3px var(--shadow)}
 .scale{display:flex;gap:7px;margin-top:9px}
