@@ -243,7 +243,12 @@ nav svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;st
 .muted{color:var(--t2);font-size:.9rem}
 .err{color:var(--bad);font-size:.9rem}
 .err-safety{font-size:.9rem;font-weight:600;margin:4px 0}
-.err-safety a{color:var(--a);font-weight:700;text-decoration:underline}
+/* Same fix as the .bubble/.card/.refl links above, and it belongs here at least as much: this is
+   the one that shows when the live model call has already failed, so it is the last line, not a
+   backup among several. */
+.err-safety a{color:var(--a);font-weight:700;text-decoration:underline;
+  display:inline-block;padding:7px 9px;margin:-7px -9px;border-radius:10px}
+.err-safety a:active{background:color-mix(in oklch,var(--a) 16%,transparent)}
 .typing{align-self:flex-start;color:var(--t2);font-size:.87rem;padding-left:8px;display:flex;gap:5px;align-items:center}
 .typing i{width:6px;height:6px;border-radius:50%;background:var(--t2);opacity:.4;animation:blink 1.2s infinite}
 .typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
