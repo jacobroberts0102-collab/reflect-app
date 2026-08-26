@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# Tracked git hook. A fresh clone needs to run `git config core.hooksPath .githooks` once
+# to activate it (this checkout already has that set).
+set -euo pipefail
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+GIT_DIR="$(git rev-parse --git-dir)"
+CHANGELOG="$REPO_ROOT/CHANGELOG.md"
+MARKER_PREFIX="chore(changelog): auto-log"
+[ -f "$CHANGELOG" ] || exit 0
+for state in rebase-merge rebase-apply CHERRY_PICK_HEAD MERGE_HEAD; do
+  [ -e "$GIT_DIR/$state" ] && exit 0
+done
+SUBJECT="$(git log -1 --pretty=%s)"
+case "$SUBJECT" in "$MARKER_PREFIX"*) exit 0 ;; esac
+PARENT_COUNT="$(git log -1 --pretty=%P | wc -w)"
+[ "$PARENT_COUNT" -gt 1 ] && exit 0
+HASH="$(git log -1 --pretty=%h)"
+DATE="$(git log -1 --pretty=%ad --date=format:%Y-%m-%d)"
+grep -qF "(\`$HASH\`)" "$CHANGELOG" && exit 0
+TYPE="$(printf '%s' "$SUBJECT" | sed -nE 's/^([a-zA-Z]+)(\([^)]*\))?!?:.*/\1/p' | tr '[:upper:]' '[:lower:]')"
+SCOPE="$(printf '%s' "$SUBJECT" | sed -nE 's/^[a-zA-Z]+\(([^)]*)\)!?:.*/\1/p')"
+DESC="$(printf '%s' "$SUBJECT" | sed -nE 's/^[a-zA-Z]+(\([^)]*\))?!?:[[:space:]]*(.*)$/\2/p')"
+[ -z "$TYPE" ] && exit 0
+[ -z "$DESC" ] && exit 0
+case "$TYPE" in feat) SECTION="Added" ;; fix) SECTION="Fixed" ;; *) SECTION="Changed" ;; esac
+if [ -n "$SCOPE" ]; then LINE="- [${DATE}] **${SCOPE}:** ${DESC} (\`${HASH}\`)"; else LINE="- [${DATE}] ${DESC} (\`${HASH}\`)"; fi
+ANCHOR="### ${SECTION}"
+grep -qxF "$ANCHOR" "$CHANGELOG" || exit 0
+TMP="$(mktemp)"
+awk -v anchor="$ANCHOR" -v line="$LINE" '{ print } $0 == anchor { print line }' "$CHANGELOG" > "$TMP" && mv "$TMP" "$CHANGELOG"
+git -C "$REPO_ROOT" add "$CHANGELOG"
+git -C "$REPO_ROOT" commit --only "$CHANGELOG" -m "$MARKER_PREFIX $HASH" >/dev/null 2>&1 || true
