@@ -11,6 +11,7 @@ on its own. Commits that aren't written in that format (including this repo's ro
 ## Unreleased
 
 ### Added
+- [2026-08-26] **reflect-app:** add a self-updating changelog (`742fbef`)
 
 ### Fixed
 
